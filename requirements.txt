@@ -1,46 +1,13 @@
-black==24.10.0
-certifi==2024.12.14
-charset-normalizer==3.4.1
-click==8.1.8
-contourpy @ file:///home/conda/feedstock_root/build_artifacts/contourpy_1731428322366/work
-cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1733332471406/work
-dnspython==2.7.0
-fonttools @ file:///home/conda/feedstock_root/build_artifacts/fonttools_1738940303262/work
-greenlet==3.1.1
-idna==3.10
 isort==5.13.2
-kiwisolver @ file:///home/conda/feedstock_root/build_artifacts/kiwisolver_1725459213453/work
-line_profiler==4.2.0
-matplotlib==3.10.0
 mongoengine==0.29.1
-munkres==1.1.4
-mypy-extensions==1.0.0
-mysql-connector-python @ file:///croot/mysql-connector-python_1732522279975/work/mysql-connector-python
-numpy @ file:///home/conda/feedstock_root/build_artifacts/numpy_1739425573380/work/dist/numpy-2.2.3-cp310-cp310-linux_x86_64.whl#sha256=edb5ad9a663c469f63fbde767c9f2f25a38aa681d29ed312240370832fa0bf37
-packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1733203243479/work
-pandas @ file:///home/conda/feedstock_root/build_artifacts/pandas_1726878398774/work
-pathspec==0.12.1
-patsy @ file:///home/conda/feedstock_root/build_artifacts/patsy_1733792384640/work
-pillow @ file:///croot/pillow_1738010226202/work
-platformdirs==4.3.6
 protobuf==4.25.3
 pymongo==4.10.1
 PyMySQL==1.1.1
-pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1735698276679/work
-PySide6==6.7.2
-python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1733215673016/work
-pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1706886791323/work
+mysql-connector-python
+pytz
 requests==2.32.3
-scipy @ file:///home/conda/feedstock_root/build_artifacts/scipy-split_1736617203912/work/dist/scipy-1.15.1-cp310-cp310-linux_x86_64.whl#sha256=48989a232eba54f78fa3de21c833f42c67440168001b1b803655d9a0317e64cf
-seaborn @ file:///home/conda/feedstock_root/build_artifacts/seaborn-split_1733730015268/work
-shiboken6==6.7.2
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1733380938961/work
+shiboken6==6.7.2k
 SQLAlchemy==2.0.37
-statsmodels @ file:///home/conda/feedstock_root/build_artifacts/statsmodels_1727986707121/work
 tomli==2.2.1
-tornado @ file:///home/conda/feedstock_root/build_artifacts/tornado_1732615898999/work
 tqdm==4.67.1
-typing_extensions==4.12.2
-tzdata @ file:///home/conda/feedstock_root/build_artifacts/python-tzdata_1737541069190/work
-unicodedata2 @ file:///home/conda/feedstock_root/build_artifacts/unicodedata2_1736692496989/work
 urllib3==2.3.0
