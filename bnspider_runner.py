@@ -139,13 +139,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-process",
         type=int,
-        default=4,
+        default=8,
         help="number of process",
     )
     parser.add_argument(
         "--thread",
         type=int,
-        default=16,
+        default=4,
         help="thread num",
     )
     parser.add_argument(
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sb-n",
         type=int,
-        default=6,
+        default=len(SYMBOL_START),
         help="symbol end",
     )
     parser.add_argument(
