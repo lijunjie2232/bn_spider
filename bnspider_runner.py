@@ -100,7 +100,7 @@ def run_spider(
 ):
     cmd = [
         "python",
-        "dataset/bn_spider/bnspider.py",
+        "bnspider.py",
         "--db-ip",
         db_ip,
         "--db-port",
