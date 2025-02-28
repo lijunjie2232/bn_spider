@@ -66,6 +66,8 @@ def get_distinct_stock_names_and_intervals(db_engine):
 # 示例调用
 if __name__ == "__main__":
     from pathlib import Path
+    from multiprocessing import Pool
+    
     ROOT = Path(__file__).parent.resolve()
     CSV_DIR = ROOT / "csv"
     CSV_DIR.mkdir(exist_ok=True)
