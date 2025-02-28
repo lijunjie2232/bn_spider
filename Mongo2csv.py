@@ -77,7 +77,7 @@ if __name__ == "__main__":
     CSV_DIR = ROOT / "csv"
     CSV_DIR.mkdir(exist_ok=True)
     stock_name = "BTCUSDT"
-    interval = 60 * 24
+    interval = 60 * 60* 24
     DB_INFO = {
         "ip": "192.168.101.14",
         "port": 27017,
