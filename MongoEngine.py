@@ -103,7 +103,14 @@ class DBEngine:
             .first()
         )
         return existing_kline is not None
-
+    
+    def queryByNameAndInterval(self, stock_name, interval, order_by="open_time", descending=False):
+        query = DBEngine.__DBTABLES__["KLine"].objects(stock_name=stock_name, interval=interval)
+        if descending:
+            order_by = f"-{order_by}"
+        query = query.order_by(order_by)
+        return query
+    
     def VSeqExists(self, stock_name, open_time, interval):
         existing_kline = (
             DBEngine.__DBTABLES__["ValidSeq"]
