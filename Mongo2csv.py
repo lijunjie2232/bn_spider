@@ -12,6 +12,39 @@ def query_and_save_to_csv(
     descending=False,
     batch_size=1000,
 ):
+
+    def yield_kline(cursor, chunk_size=batch_size):
+        """
+        Generator to yield chunks from cursor
+        :param cursor:
+        :param chunk_size:
+        :return:
+        """
+        chunk = []
+        for i, kline in enumerate(cursor):
+            if i % chunk_size == 0:
+                if chunk:
+                    yield chunk
+                    del chunk[:]
+            chunk.append(
+                [
+                    kline.stock_name,
+                    kline.open_time,
+                    kline.interval,
+                    kline.open_price,
+                    kline.high_price,
+                    kline.low_price,
+                    kline.close_price,
+                    kline.volume,
+                    kline.close_time,
+                    kline.quote_asset_volume,
+                    kline.number_of_trades,
+                    kline.taker_buy_base_asset_volume,
+                    kline.taker_buy_quote_asset_volume,
+                ]
+            )
+        yield chunk
+
     logger = get_logger()
     db_engine = DBEngine(**DB_INFO)
 
@@ -21,6 +54,7 @@ def query_and_save_to_csv(
         interval,
         order_by,
         descending,
+        # batch_size=batch_size,
     )
 
     # 将查询结果写入CSV文件
@@ -45,26 +79,8 @@ def query_and_save_to_csv(
             ]
         )
         # 写入数据行
-        for batch in query_result.batch_size(batch_size).as_pymongo():
-            rows = [
-                [
-                    kline.stock_name,
-                    kline.open_time,
-                    kline.interval,
-                    kline.open_price,
-                    kline.high_price,
-                    kline.low_price,
-                    kline.close_price,
-                    kline.volume,
-                    kline.close_time,
-                    kline.quote_asset_volume,
-                    kline.number_of_trades,
-                    kline.taker_buy_base_asset_volume,
-                    kline.taker_buy_quote_asset_volume,
-                ]
-                for kline in batch
-            ]
-            writer.writerows(rows)
+        for batch in yield_kline(query_result):
+            writer.writerows(batch)
             logger.info(
                 f"Written {len(batch)} line(s) to CSV for {stock_name} with {interval}s interval"
             )
