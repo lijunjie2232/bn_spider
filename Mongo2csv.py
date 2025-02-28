@@ -4,14 +4,23 @@ from utils import get_logger
 
 
 def query_and_save_to_csv(
-    DB_INFO, stock_name, interval, output_file, order_by="open_time", descending=False
+    DB_INFO,
+    stock_name,
+    interval,
+    output_file,
+    order_by="open_time",
+    descending=False,
+    batch_size=1000,
 ):
     logger = get_logger()
     db_engine = DBEngine(**DB_INFO)
 
     # 调用queryByNameAndInterval方法获取数据
     query_result = db_engine.queryByNameAndInterval(
-        stock_name, interval, order_by, descending
+        stock_name,
+        interval,
+        order_by,
+        descending,
     )
 
     # 将查询结果写入CSV文件
@@ -36,8 +45,8 @@ def query_and_save_to_csv(
             ]
         )
         # 写入数据行
-        for kline in query_result:
-            writer.writerow(
+        for batch in query_result.batch_size(batch_size).as_pymongo():
+            rows = [
                 [
                     kline.stock_name,
                     kline.open_time,
@@ -53,8 +62,12 @@ def query_and_save_to_csv(
                     kline.taker_buy_base_asset_volume,
                     kline.taker_buy_quote_asset_volume,
                 ]
+                for kline in batch
+            ]
+            writer.writerows(rows)
+            logger.info(
+                f"Written {len(batch)} line(s) to CSV for {stock_name} with {interval}s interval"
             )
-            logger.info(f"{kline.stock_name} wrote 1 line to CSV with {interval}s interval from {kline.open_time}")
 
 
 # 新增：调用distinct_query获取stock_name和interval列表
@@ -81,7 +94,7 @@ if __name__ == "__main__":
     CSV_DIR = ROOT / "csv"
     CSV_DIR.mkdir(exist_ok=True)
     stock_name = "BTCUSDT"
-    interval = 60 * 60* 24
+    interval = 60 * 60
     DB_INFO = {
         "ip": "192.168.101.14",
         "port": 27017,
@@ -89,7 +102,6 @@ if __name__ == "__main__":
         "password": "root",
         "db": "binance",
     }
-    
 
     # 获取stock_name和interval列表
     stock_names, intervals = get_distinct_stock_names_and_intervals(DB_INFO)
@@ -97,21 +109,21 @@ if __name__ == "__main__":
     print("Intervals:", intervals)
 
     # compare with system core num
-    NUM_PROCESSES = os.cpu_count() if len(stock_name) * len(intervals) > os.cpu_count() else len(stock_name) * len(intervals)
-    with Pool(NUM_PROCESSES) as pool:
-        for stock_name in stock_names:
-            for interval in intervals:
-                pool.apply_async(
-                    query_and_save_to_csv,
-                    args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
-                )
-        
-        pool.close()
-        pool.join()
+    # NUM_PROCESSES = os.cpu_count() if len(stock_name) * len(intervals) > os.cpu_count() else len(stock_name) * len(intervals)
+    # with Pool(NUM_PROCESSES) as pool:
+    #     for stock_name in stock_names:
+    #         for interval in intervals:
+    #             pool.apply_async(
+    #                 query_and_save_to_csv,
+    #                 args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
+    #             )
 
-    # query_and_save_to_csv(
-    #     DB_INFO,
-    #     stock_name,
-    #     interval,
-    #     CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
-    # )
+    #     pool.close()
+    #     pool.join()
+
+    query_and_save_to_csv(
+        DB_INFO,
+        stock_name,
+        interval,
+        CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
+    )
