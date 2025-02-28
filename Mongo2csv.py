@@ -75,6 +75,7 @@ def get_distinct_stock_names_and_intervals(DB_INFO):
 if __name__ == "__main__":
     from pathlib import Path
     from multiprocessing import Pool
+    import os
 
     ROOT = Path(__file__).parent.resolve()
     CSV_DIR = ROOT / "csv"
@@ -95,9 +96,22 @@ if __name__ == "__main__":
     print("Stock Names:", stock_names)
     print("Intervals:", intervals)
 
-    query_and_save_to_csv(
-        DB_INFO,
-        stock_name,
-        interval,
-        CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
-    )
+    # compare with system core num
+    NUM_PROCESSES = os.cpu_count() if len(stock_name) * len(intervals) > os.cpu_count() else len(stock_name) * len(intervals)
+    with Pool(NUM_PROCESSES) as pool:
+        for stock_name in stock_names:
+            for interval in intervals:
+                pool.apply_async(
+                    query_and_save_to_csv,
+                    args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
+                )
+        
+        pool.close()
+        pool.join()
+
+    # query_and_save_to_csv(
+    #     DB_INFO,
+    #     stock_name,
+    #     interval,
+    #     CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
+    # )
