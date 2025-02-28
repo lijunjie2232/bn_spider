@@ -1,7 +1,6 @@
 import csv
 from MongoEngine import DBEngine  # 导入DBEngine类
 
-
 def query_and_save_to_csv(
     db_engine, stock_name, interval, output_file, order_by="open_time", descending=False
 ):
@@ -52,6 +51,17 @@ def query_and_save_to_csv(
                 ]
             )
 
+# 新增：调用distinct_query获取stock_name和interval列表
+def get_distinct_stock_names_and_intervals(db_engine):
+    # 获取stock_name列表
+    stock_names = db_engine.distinct_query("kline", {}, "stock_name", ["stock_name"])
+    stock_names = [item["stock_name"] for item in stock_names]
+    
+    # 获取interval列表
+    intervals = db_engine.distinct_query("kline", {}, "interval", ["interval"])
+    intervals = [item["interval"] for item in intervals]
+    
+    return stock_names, intervals
 
 # 示例调用
 if __name__ == "__main__":
@@ -68,10 +78,16 @@ if __name__ == "__main__":
         "password": "root",
         "db": "binance",
     }
+    db_engine = DBEngine(**DB_INFO)
+    
+    # 获取stock_name和interval列表
+    stock_names, intervals = get_distinct_stock_names_and_intervals(db_engine)
+    print("Stock Names:", stock_names)
+    print("Intervals:", intervals)
+    
+    
     query_and_save_to_csv(
-        DBEngine(
-            **DB_INFO
-        ),
+        db_engine,
         stock_name,
         interval,
         CSV_DIR/f"{stock_name}_{interval}.csv",  # 输出文件路径
