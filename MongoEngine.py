@@ -353,7 +353,7 @@ class DBEngine:
         result = collection.aggregate(pipeline)
 
         # 返回结果
-        return list(result)
+        return  [item["_id"] for item in result]
 
 
 # 定义文档类

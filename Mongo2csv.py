@@ -1,9 +1,11 @@
 import csv
 from MongoEngine import DBEngine  # 导入DBEngine类
 
+
 def query_and_save_to_csv(
-    db_engine, stock_name, interval, output_file, order_by="open_time", descending=False
+    DB_INFO, stock_name, interval, output_file, order_by="open_time", descending=False
 ):
+    db_engine = DBEngine(**DB_INFO)
 
     # 调用queryByNameAndInterval方法获取数据
     query_result = db_engine.queryByNameAndInterval(
@@ -51,46 +53,48 @@ def query_and_save_to_csv(
                 ]
             )
 
+
 # 新增：调用distinct_query获取stock_name和interval列表
-def get_distinct_stock_names_and_intervals(db_engine):
+def get_distinct_stock_names_and_intervals(DB_INFO):
+    db_engine = DBEngine(**DB_INFO)
     # 获取stock_name列表
     stock_names = db_engine.distinct_query("kline", {}, "stock_name", ["stock_name"])
-    stock_names = [item["stock_name"] for item in stock_names]
-    
+    # stock_names = [item["_id"] for item in stock_names]
+
     # 获取interval列表
     intervals = db_engine.distinct_query("kline", {}, "interval", ["interval"])
-    intervals = [item["interval"] for item in intervals]
-    
+    # intervals = [item["_id"] for item in intervals]
+
     return stock_names, intervals
+
 
 # 示例调用
 if __name__ == "__main__":
     from pathlib import Path
     from multiprocessing import Pool
-    
+
     ROOT = Path(__file__).parent.resolve()
     CSV_DIR = ROOT / "csv"
     CSV_DIR.mkdir(exist_ok=True)
     stock_name = "BTCUSDT"
-    interval = 60
+    interval = 60 * 24
     DB_INFO = {
-        "ip": "127.0.0.1",
+        "ip": "192.168.101.14",
         "port": 27017,
         "user": "root",
         "password": "root",
         "db": "binance",
     }
-    db_engine = DBEngine(**DB_INFO)
     
+
     # 获取stock_name和interval列表
-    stock_names, intervals = get_distinct_stock_names_and_intervals(db_engine)
+    stock_names, intervals = get_distinct_stock_names_and_intervals(DB_INFO)
     print("Stock Names:", stock_names)
     print("Intervals:", intervals)
-    
-    
+
     query_and_save_to_csv(
-        db_engine,
+        DB_INFO,
         stock_name,
         interval,
-        CSV_DIR/f"{stock_name}_{interval}.csv",  # 输出文件路径
+        CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
     )
