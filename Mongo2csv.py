@@ -1,10 +1,12 @@
 import csv
 from MongoEngine import DBEngine  # 导入DBEngine类
+from utils import get_logger
 
 
 def query_and_save_to_csv(
     DB_INFO, stock_name, interval, output_file, order_by="open_time", descending=False
 ):
+    logger = get_logger()
     db_engine = DBEngine(**DB_INFO)
 
     # 调用queryByNameAndInterval方法获取数据
@@ -52,6 +54,7 @@ def query_and_save_to_csv(
                     kline.taker_buy_quote_asset_volume,
                 ]
             )
+            logger.info(f"{kline.stock_name} wrote 1 line to CSV with {interval}s interval from {kline.open_time}")
 
 
 # 新增：调用distinct_query获取stock_name和interval列表
