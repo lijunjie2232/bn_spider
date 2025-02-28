@@ -338,6 +338,23 @@ class DBEngine:
         except Exception as e:
             traceback.print_exc()
 
+    def distinct_query(self, collection_name, query, distinct_field, fields):
+        # 获取 pymongo 的集合对象
+        collection = self.connect[self.db][collection_name]
+
+        # 构建聚合管道
+        pipeline = [
+            {"$match": query},
+            {"$group": {"_id": f"${distinct_field}", "data": {"$first": "$$ROOT"}}},
+            {"$project": {field: 1 for field in fields}}
+        ]
+
+        # 执行聚合查询
+        result = collection.aggregate(pipeline)
+
+        # 返回结果
+        return list(result)
+
 
 # 定义文档类
 @DBEngine.register_table
