@@ -125,21 +125,21 @@ if __name__ == "__main__":
     print("Intervals:", intervals)
 
     # compare with system core num
-    # NUM_PROCESSES = os.cpu_count() if len(stock_name) * len(intervals) > os.cpu_count() else len(stock_name) * len(intervals)
-    # with Pool(NUM_PROCESSES) as pool:
-    #     for stock_name in stock_names:
-    #         for interval in intervals:
-    #             pool.apply_async(
-    #                 query_and_save_to_csv,
-    #                 args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
-    #             )
+    NUM_PROCESSES = os.cpu_count() if len(stock_name) * len(intervals) > os.cpu_count() else len(stock_name) * len(intervals)
+    with Pool(NUM_PROCESSES) as pool:
+        for interval in intervals:
+            for stock_name in stock_names:
+                pool.apply_async(
+                    query_and_save_to_csv,
+                    args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
+                )
 
-    #     pool.close()
-    #     pool.join()
+        pool.close()
+        pool.join()
 
-    query_and_save_to_csv(
-        DB_INFO,
-        stock_name,
-        interval,
-        CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
-    )
+    # query_and_save_to_csv(
+    #     DB_INFO,
+    #     stock_name,
+    #     interval,
+    #     CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
+    # )
