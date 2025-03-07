@@ -3,17 +3,22 @@ from MongoEngine import DBEngine  # 导入DBEngine类
 from utils import get_logger
 
 
-def query_and_save_to_csv(
+def export_validseq_to_csv(
     DB_INFO,
-    stock_name,
     interval,
     output_file,
-    order_by="open_time",
+    order_by=["stock_name", "interval", "open_time"],
     descending=False,
     batch_size=1000,
 ):
+    """
+    将 ValidSeq 表的数据导出到 CSV 文件，并按 stock_name、interval、open_time 排序。
 
-    def yield_kline(cursor, chunk_size=batch_size):
+    :param db: DBEngine 实例
+    :param output_file: 输出的 CSV 文件路径
+    """
+
+    def yield_vseq(cursor, chunk_size=batch_size):
         """
         Generator to yield chunks from cursor
         :param cursor:
@@ -21,36 +26,31 @@ def query_and_save_to_csv(
         :return:
         """
         chunk = []
-        for i, kline in enumerate(cursor):
+        for i, vseq in enumerate(cursor):
             if i % chunk_size == 0:
                 if chunk:
                     yield chunk
                     del chunk[:]
             chunk.append(
                 [
-                    kline.stock_name,
-                    kline.open_time,
-                    kline.interval,
-                    kline.open_price,
-                    kline.high_price,
-                    kline.low_price,
-                    kline.close_price,
-                    kline.volume,
-                    kline.close_time,
-                    kline.quote_asset_volume,
-                    kline.number_of_trades,
-                    kline.taker_buy_base_asset_volume,
-                    kline.taker_buy_quote_asset_volume,
+                    vseq.stock_name,
+                    vseq.interval,
+                    vseq.open_time,
+                    vseq.length,
                 ]
             )
         yield chunk
+
+    # 定义 CSV 文件的表头
+    headers = ["stock_name", "interval", "open_time", "length"]
 
     logger = get_logger()
     db_engine = DBEngine(**DB_INFO)
 
     # 调用queryByNameAndInterval方法获取数据
     query_result = db_engine.queryByNameAndInterval(
-        stock_name,
+        # stock_name,
+        "*",
         interval,
         order_by,
         descending,
@@ -61,40 +61,26 @@ def query_and_save_to_csv(
     with open(output_file, mode="w", newline="") as file:
         writer = csv.writer(file)
         # 写入表头
-        writer.writerow(
-            [
-                "stock_name",
-                "open_time",
-                "interval",
-                "open_price",
-                "high_price",
-                "low_price",
-                "close_price",
-                "volume",
-                "close_time",
-                "quote_asset_volume",
-                "number_of_trades",
-                "taker_buy_base_asset_volume",
-                "taker_buy_quote_asset_volume",
-            ]
-        )
+        writer.writerow(headers)
         # 写入数据行
-        for batch in yield_kline(query_result):
+        for batch in yield_vseq(query_result):
             writer.writerows(batch)
             logger.info(
                 f"Written {len(batch)} line(s) to CSV for {stock_name} with {interval}s interval"
             )
+
+    print(f"ValidSeq 数据已成功导出到 {output_file}")
 
 
 # 新增：调用distinct_query获取stock_name和interval列表
 def get_distinct_stock_names_and_intervals(DB_INFO):
     db_engine = DBEngine(**DB_INFO)
     # 获取stock_name列表
-    stock_names = db_engine.distinct_query("kline", {}, "stock_name", ["stock_name"])
+    stock_names = db_engine.distinct_query("vseq", {}, "stock_name", ["stock_name"])
     # stock_names = [item["_id"] for item in stock_names]
 
     # 获取interval列表
-    intervals = db_engine.distinct_query("kline", {}, "interval", ["interval"])
+    intervals = db_engine.distinct_query("vseq", {}, "interval", ["interval"])
     # intervals = [item["_id"] for item in intervals]
 
     return stock_names, intervals
@@ -125,14 +111,21 @@ if __name__ == "__main__":
     print("Intervals:", intervals)
 
     # compare with system core num
-    NUM_PROCESSES = os.cpu_count() if len(stock_names) * len(intervals) > os.cpu_count() else len(stock_names) * len(intervals)
+    NUM_PROCESSES = (
+        os.cpu_count()
+        if len(stock_names) * len(intervals) > os.cpu_count()
+        else len(stock_names) * len(intervals) + 1
+    )
     with Pool(NUM_PROCESSES) as pool:
         for interval in intervals:
-            for stock_name in stock_names:
-                pool.apply_async(
-                    query_and_save_to_csv,
-                    args=(DB_INFO, stock_name, interval, CSV_DIR / f"{stock_name}_{interval}.csv"),
-                )
+            pool.apply_async(
+                export_validseq_to_csv,
+                args=(
+                    DB_INFO,
+                    interval,
+                    CSV_DIR / f"seq_{stock_name}_{interval}.csv",
+                ),
+            )
 
         pool.close()
         pool.join()
@@ -143,3 +136,12 @@ if __name__ == "__main__":
     #     interval,
     #     CSV_DIR / f"{stock_name}_{interval}.csv",  # 输出文件路径
     # )
+
+
+# 示例调用
+if __name__ == "__main__":
+    # 初始化 DBEngine 实例
+    db = DBEngine(ip="192.168.101.14")
+
+    # 导出 ValidSeq 数据到 CSV 文件
+    export_validseq_to_csv(db, output_file="validseq.csv")
