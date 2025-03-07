@@ -103,16 +103,36 @@ class DBEngine:
             .first()
         )
         return existing_kline is not None
-    
-    def queryByNameAndInterval(self, stock_name, interval, order_by="open_time", descending=False, batch_size=-1):
-        query = DBEngine.__DBTABLES__["KLine"].objects(stock_name=stock_name, interval=interval)
-        if descending:
-            order_by = f"-{order_by}"
-        query = query.order_by(order_by)
+
+    def queryByNameAndInterval(
+        self,
+        stock_name=None,
+        interval=None,
+        order_by="open_time",
+        descending=False,
+        batch_size=-1,
+        collection="KLine",
+    ):
+        qfilter = {}
+        if stock_name:
+            qfilter["stock_name"] = stock_name
+        if interval:
+            qfilter["interval"] = interval
+        query = DBEngine.__DBTABLES__[collection].objects(**qfilter)
+        if isinstance(order_by, str):
+            order_by = [order_by]
+        if isinstance(descending, bool):
+            descending = [descending]
+        assert len(order_by) == len(descending)
+        for i, order in enumerate(order_by):
+            desc = descending[i]
+            if desc:
+                order_by[i] = f"-{order}"
+        query = query.order_by(*order_by)
         if batch_size > 1:
             query = query.batch_size(batch_size).batch_size(batch_size).as_pymongo()
         return query
-    
+
     def VSeqExists(self, stock_name, open_time, interval):
         existing_kline = (
             DBEngine.__DBTABLES__["ValidSeq"]
@@ -348,14 +368,14 @@ class DBEngine:
         pipeline = [
             {"$match": query},
             {"$group": {"_id": f"${distinct_field}", "data": {"$first": "$$ROOT"}}},
-            {"$project": {field: 1 for field in fields}}
+            {"$project": {field: 1 for field in fields}},
         ]
 
         # 执行聚合查询
         result = collection.aggregate(pipeline)
 
         # 返回结果
-        return  [item["_id"] for item in result]
+        return [item["_id"] for item in result]
 
 
 # 定义文档类
@@ -536,8 +556,8 @@ if __name__ == "__main__":
 
     debug = False
     missing_data = {}
-    symbolList = list(SYMBOL_START.keys())#[15:18]
-    timeList = TIME_GRID#[4:7]
+    symbolList = list(SYMBOL_START.keys())  # [15:18]
+    timeList = TIME_GRID  # [4:7]
     num_process = len(symbolList) * len(timeList)
     loop = tqdm(desc="find missing data", total=num_process)
 
